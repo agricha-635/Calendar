@@ -1,4 +1,5 @@
-using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
@@ -17,70 +18,84 @@ public class DatePicker : MonoBehaviour
     private int selectedMonth;
     private int selectedYear;
 
-    private int currentYear;
-    private int currentMonth;
-    private int currentDay;
-
     void Start()
     {
-        DateTime currentDate = System.DateTime.Now;
-        currentYear = currentDate.Year;
-        currentMonth = currentDate.Month;
-        currentDay = currentDate.Day;
-
-        Debug.Log("Current Date: " + currentDate);
-        PopulateDays(currentDay);
-        PopulateMonths(currentMonth);
+        PopulateDays(31); // Initially populate with maximum days
+        PopulateMonths();
         PopulateYears();
 
         // Initialize default selections
-        selectedDay = currentDay;
-        selectedMonth = currentMonth;
-        selectedYear = currentYear;
+        selectedDay = 1;
+        selectedMonth = 1;
+        selectedYear = 2000;
 
-        dateInputField.text = string.Empty;
-
-        // UpdateInputField();
+        UpdateInputField();
     }
 
-    void PopulateDays(int maxDays)
+    void PopulateDays(int days)
     {
         foreach (Transform child in dayScrollViewContent.transform)
         {
             Destroy(child.gameObject);
         }
 
-        for (int i = 1; i <= maxDays; i++)
+        // Add padding items before actual days
+        // AddPaddingItems(dayScrollViewContent, 4);
+
+        for (int i = 1; i <= days; i++)
         {
             GameObject dayText = Instantiate(selectedDatePrefab, dayScrollViewContent.transform);
             TMP_Text textComponent = dayText.GetComponent<TMP_Text>();
-            textComponent.text = i.ToString("00");
+            if (i < 10)
+            {
+                textComponent.text = "0" + i.ToString();
+            }
+            else
+            {
+                textComponent.text = i.ToString();
+            }
             dayText.name = "Day_" + i;
 
             Button button = dayText.GetComponent<Button>();
             int day = i;
             button.onClick.AddListener(() => OnDaySelected(day));
         }
+
+        // Add padding items after actual days
+        // AddPaddingItems(dayScrollViewContent, 4);
     }
 
-    void PopulateMonths(int maxMonth)
+    void PopulateMonths()
     {
         foreach (Transform child in monthScrollViewContent.transform)
         {
             Destroy(child.gameObject);
         }
 
-        for (int i = 1; i <= maxMonth; i++)
+        // Add padding items before actual months
+        // AddPaddingItems(monthScrollViewContent, 4);
+
+        for (int i = 1; i <= 12; i++)
         {
             GameObject monthText = Instantiate(selectedMonthPrefab, monthScrollViewContent.transform);
             TMP_Text textComponent = monthText.GetComponent<TMP_Text>();
-            textComponent.text = i.ToString("00");
+            if (i < 10)
+            {
+                textComponent.text = "0" + i.ToString();
+            }
+            else
+            {
+                textComponent.text = i.ToString();
+            }
             monthText.name = "Month_" + i;
 
             Button button = monthText.GetComponent<Button>();
             int month = i;
             button.onClick.AddListener(() => OnMonthSelected(month));
         }
+
+        // Add padding items after actual months
+        // AddPaddingItems(monthScrollViewContent, 4);
     }
 
     void PopulateYears()
@@ -90,10 +105,10 @@ public class DatePicker : MonoBehaviour
             Destroy(child.gameObject);
         }
 
-        int startYear = currentYear - 50; // 50 years back from the current year
-        int endYear = currentYear; // Up to the current year
+        // Add padding items before actual years
+        // AddPaddingItems(yearScrollViewContent, 4);
 
-        for (int i = startYear; i <= endYear; i++)
+        for (int i = 2000; i <= 2030; i++)
         {
             GameObject yearText = Instantiate(selectedYearPrefab, yearScrollViewContent.transform);
             yearText.GetComponent<TMP_Text>().text = i.ToString();
@@ -103,7 +118,21 @@ public class DatePicker : MonoBehaviour
             int year = i;
             button.onClick.AddListener(() => OnYearSelected(year));
         }
+
+        // Add padding items after actual years
+        // AddPaddingItems(yearScrollViewContent, 4);
     }
+
+    // void AddPaddingItems(GameObject scrollViewContent, int paddingCount)
+    // {
+    //     for (int i = 0; i < paddingCount; i++)
+    //     {
+    //         GameObject paddingItem = new GameObject("PaddingItem");
+    //         paddingItem.transform.SetParent(scrollViewContent.transform);
+    //         RectTransform rectTransform = paddingItem.AddComponent<RectTransform>();
+    //         rectTransform.sizeDelta = new Vector2(0, 30); // Adjust height as needed
+    //     }
+    // }
 
     void OnDaySelected(int day)
     {
@@ -127,7 +156,16 @@ public class DatePicker : MonoBehaviour
 
     void UpdateDaysForMonth()
     {
-        int daysInMonth = DateTime.DaysInMonth(selectedYear, selectedMonth);
+        int daysInMonth = 31;
+
+        if (selectedMonth == 2)
+        {
+            daysInMonth = IsLeapYear(selectedYear) ? 29 : 28;
+        }
+        else if (selectedMonth == 4 || selectedMonth == 6 || selectedMonth == 9 || selectedMonth == 11)
+        {
+            daysInMonth = 30;
+        }
 
         PopulateDays(daysInMonth);
 
@@ -136,6 +174,11 @@ public class DatePicker : MonoBehaviour
         {
             selectedDay = daysInMonth;
         }
+    }
+
+    bool IsLeapYear(int year)
+    {
+        return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
     }
 
     void UpdateInputField()
