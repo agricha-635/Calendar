@@ -3,13 +3,11 @@ using UnityEngine.UI;
 using System;
 using TMPro;
 
-public class DatePickerCotroller : MonoBehaviour
+public class DatePickerController : MonoBehaviour
 {
-    public GameObject datePickerPanel;     // Panel containing the date picker
     public TMP_Dropdown dayDropdown;       // Dropdown for days
     public TMP_Dropdown monthDropdown;     // Dropdown for months
     public TMP_Dropdown yearDropdown;      // Dropdown for years
-    public TMP_InputField dateInputField;  // Input field to display the selected date
     public Button doneButton;              // Button to confirm the date selection
 
     private int selectedDay;
@@ -17,6 +15,8 @@ public class DatePickerCotroller : MonoBehaviour
     private int selectedYear;
 
     private int currentYear, currentMonth, currentDay;
+
+    public Action<string> OnDateSelected;  // Callback for when the date is selected
 
     void Start()
     {
@@ -35,13 +35,7 @@ public class DatePickerCotroller : MonoBehaviour
         PopulateMonths(12);
         PopulateDays(DateTime.DaysInMonth(selectedYear, selectedMonth));
 
-        UpdateInputField();
-
-        // Add listener to input field to activate date picker panel
-        dateInputField.onSelect.AddListener(delegate { ShowDatePickerPanel(); });
-
         // Add listener to done button to update input field and deactivate date picker panel
-        // doneButton.onClick.AddListener(UpdateInputField);
         doneButton.onClick.AddListener(OnClickDoneButton);
 
         // Add listeners to dropdowns
@@ -49,22 +43,15 @@ public class DatePickerCotroller : MonoBehaviour
         monthDropdown.onValueChanged.AddListener(delegate { UpdateSelectedMonth(); });
         yearDropdown.onValueChanged.AddListener(delegate { UpdateSelectedYear(); });
 
-        // Ensure date picker panel is initially inactive
-        datePickerPanel.SetActive(false);
-
         // Set current selections
         SetCurrentSelections();
     }
 
-    void ShowDatePickerPanel()
-    {
-        datePickerPanel.SetActive(true);
-    }
-
     void OnClickDoneButton()
     {
-        datePickerPanel.SetActive(false);
-        UpdateInputField();
+        string formattedDate = $"{selectedDay:00}-{selectedMonth:00}-{selectedYear}";
+        OnDateSelected?.Invoke(formattedDate);
+        gameObject.SetActive(false);
     }
 
     void PopulateDays(int days)
@@ -149,12 +136,6 @@ public class DatePickerCotroller : MonoBehaviour
             selectedDay = currentDay;
             dayDropdown.value = currentDay - 1; // Update the dropdown to show the correct day
         }
-    }
-
-    void UpdateInputField()
-    {
-        string formattedDate = $"{selectedDay:00}-{selectedMonth:00}-{selectedYear}";
-        dateInputField.text = formattedDate;
     }
 
     void SetCurrentSelections()
